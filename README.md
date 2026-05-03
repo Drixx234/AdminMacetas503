@@ -34,7 +34,12 @@ MACETAS es un emprendimiento salvadoreño enfocado en la creación y venta de ma
 
 ##  Responsable del Proyecto
 
-**Nombre:** Francisco Samuel García
+- Francisco Samuel García Cruz 	  - 20240528
+-Jeancarlo Aarón Araniva Castellano    -20240096
+-Andryck Johannes Zepeda Laguna	  - 20240136
+-Mauricio José Castro García		  -20240746
+-Lisseth Del Carmen Erazo Martinéz 	   - 20240535
+
 
 ---
 
