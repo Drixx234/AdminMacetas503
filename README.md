@@ -2,11 +2,15 @@
 
 ##  Información del Proyecto
 
-**Nombre del emprendimiento:** MACETAS
-**Propietaria:** Paz Lazo de Valencia
-**Código:** 27063
-**Ciudad:** San Salvador
-**Correo:** [macetas503@gmail.com](mailto:macetas503@gmail.com)
+**-Nombre del emprendimiento:** MACETAS
+
+**-Propietaria:** Paz Lazo de Valencia
+
+**-Código:** 27063
+
+**-Ciudad:** San Salvador
+
+**-Correo:** [macetas503@gmail.com](mailto:macetas503@gmail.com)
 
 **Descripción:**
 MACETAS es un emprendimiento salvadoreño enfocado en la creación y venta de macetas de concreto, recuerditos, souvenirs y productos para jardinería. Combina diseño creativo con servicio a domicilio, facilitando el acceso a productos decorativos y de cultivo en casa.
