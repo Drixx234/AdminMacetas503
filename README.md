@@ -1,6 +1,6 @@
-# 🌱 MACETAS - Sistema de Gestión para Emprendimiento
+#  MACETAS - Sistema de Gestión para Emprendimiento
 
-## 📌 Información del Proyecto
+##  Información del Proyecto
 
 **Nombre del emprendimiento:** MACETAS
 **Propietaria:** Paz Lazo de Valencia
@@ -49,7 +49,7 @@ MACETAS es un emprendimiento salvadoreño enfocado en la creación y venta de ma
 * Express.js — Creación de APIs REST
 * JavaScript — Lógica del backend
 
-### 🗄️ Base de Datos
+###  Base de Datos
 
 * MongoDB — Almacenamiento de datos
 
