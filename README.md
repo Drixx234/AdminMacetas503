@@ -1,3 +1,4 @@
+<img width="3780" height="1890" alt="Green Illustration Minimalist Community Gathering Banner" src="https://github.com/user-attachments/assets/0b74d8e8-d18b-43fa-a1a3-14af7daf17da" />
 #  MACETAS - Sistema de Gestión para Emprendimiento
 
 ##  Información del Proyecto
