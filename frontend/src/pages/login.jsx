@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../assets/logo.png';
 
-const Login = ({ onForgotPassword, onLoginSuccess }) => {
+const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: 'admin@macetas503.com',
     password: ''
@@ -21,17 +23,18 @@ const Login = ({ onForgotPassword, onLoginSuccess }) => {
     e.preventDefault();
     
     if (formData.password === '123456') {
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
+      navigate('/dashboard');
     } else {
       setError('Contraseña incorrecta');
     }
   };
 
+  const handleForgotPassword = () => {
+    navigate('/recuperar');
+  };
+
   return (
     <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg, #AEBC98 0%, #8A9B6E 100%)' }}>
-      {/* Lado izquierdo*/}
       <div className="flex-1 flex flex-col justify-center items-center p-10">
         <div className="w-full max-w-lg">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center">
@@ -50,7 +53,6 @@ const Login = ({ onForgotPassword, onLoginSuccess }) => {
         </div>
       </div>
 
-      {/*Lado derecho */}
       <div className="flex-1 flex justify-center items-center p-10">
         <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
           <div className="text-center mb-8">
@@ -117,7 +119,7 @@ const Login = ({ onForgotPassword, onLoginSuccess }) => {
                 type="button" 
                 className="bg-none border-none cursor-pointer text-sm underline transition-colors"
                 style={{ color: '#8A9B6E' }}
-                onClick={onForgotPassword}
+                onClick={handleForgotPassword}
               >
                 ¿Olvidaste tu contraseña?
               </button>

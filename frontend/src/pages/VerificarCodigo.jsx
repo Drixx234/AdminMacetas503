@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const VerificarCodigo = ({ onBackToLogin, onVerifySuccess }) => {
+const VerificarCodigo = () => {
+  const navigate = useNavigate();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const inputRefs = [
@@ -31,10 +33,7 @@ const VerificarCodigo = ({ onBackToLogin, onVerifySuccess }) => {
     const verificationCode = code.join('');
     
     if (verificationCode === '123456') {
-      // Llamar a la función para ir a nueva contraseña
-      if (onVerifySuccess) {
-        onVerifySuccess();
-      }
+      navigate('/nueva-contrasena');
     } else {
       setError('Código incorrecto');
     }
@@ -96,7 +95,7 @@ const VerificarCodigo = ({ onBackToLogin, onVerifySuccess }) => {
               type="button" 
               className="bg-none border-none cursor-pointer text-sm underline transition-colors"
               style={{ color: '#8A9B6E' }}
-              onClick={onBackToLogin}
+              onClick={() => navigate('/login')}
             >
               ¿Recuerdas tu contraseña?
             </button>

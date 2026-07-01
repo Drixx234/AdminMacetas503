@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const NuevaContrasena = ({ onBackToLogin }) => {
+const NuevaContrasena = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -13,7 +15,6 @@ const NuevaContrasena = ({ onBackToLogin }) => {
       ...formData,
       [name]: value
     });
-    // Limpiar error del campo específico
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -45,7 +46,7 @@ const NuevaContrasena = ({ onBackToLogin }) => {
     const newErrors = validateForm();
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('Contraseña actualizada exitosamente');
+      navigate('/login');
     } else {
       setErrors(newErrors);
     }

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const RecuperarPassword = ({ onBackToLogin, onSendCode }) => {
+const RecuperarPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('20240096@ricaldone.edu.sv');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -24,9 +26,9 @@ const RecuperarPassword = ({ onBackToLogin, onSendCode }) => {
     }
     
     setSuccess(true);
-    if (onSendCode) {
-      onSendCode(email);
-    }
+    setTimeout(() => {
+      navigate('/verificar');
+    }, 1500);
   };
 
   if (success) {
@@ -96,7 +98,7 @@ const RecuperarPassword = ({ onBackToLogin, onSendCode }) => {
               type="button" 
               className="bg-none border-none cursor-pointer text-sm underline transition-colors"
               style={{ color: '#8A9B6E' }}
-              onClick={onBackToLogin}
+              onClick={() => navigate('/login')}
             >
               ¿Recuerdas tu contraseña?
             </button>
