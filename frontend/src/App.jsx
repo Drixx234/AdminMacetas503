@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import MacetasPage from './pages/Macetas';
 import VelasPage from './pages/Velas';
 import AjustesPage from './pages/Ajustes';
+import InventarioPage from './pages/Inventario';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/macetas" element={<MacetasPage />} />
         <Route path="/velas" element={<VelasPage />} />
         <Route path="/ajustes" element={<AjustesPage/>} />
+        <Route path="/inventario" element={<InventarioPage/>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
