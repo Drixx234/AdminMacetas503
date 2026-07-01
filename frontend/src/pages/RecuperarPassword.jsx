@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from '../hooks/useForm';
+import { useToast } from '../hooks/useToast';
 
 const RecuperarPassword = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('20240096@ricaldone.edu.sv');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const { showSuccess, showError } = useToast(4000);
 
-  const handleChange = (e) => {
-    setEmail(e.target.value);
-    setError('');
+  const validate = (values) => {
+    const errors = {};
+    if (!values.email) {
+      errors.email = 'El correo es requerido';
+    } else if (!values.email.includes('@')) {
+      errors.email = 'Correo electrónico inválido';
+    }
+    return errors;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!email) {
-      setError('El correo es requerido');
-      return;
-    }
-    
-    if (!email.includes('@')) {
-      setError('Correo electrónico inválido');
-      return;
-    }
-    
+  const { values, errors, handleChange, handleSubmit, isSubmitting } = useForm({
+    email: '20240096@ricaldone.edu.sv'
+  }, validate);
+
+  const [success, setSuccess] = React.useState(false);
+
+  const onSubmit = (formData) => {
     setSuccess(true);
+    showSuccess(`Código enviado a ${formData.email}`);
     setTimeout(() => {
       navigate('/verificar');
     }, 1500);
@@ -43,7 +43,7 @@ const RecuperarPassword = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">¡Correo Enviado!</h2>
             <p className="text-gray-600">Hemos enviado un código de verificación a:</p>
-            <p className="font-semibold mt-1" style={{ color: '#8A9B6E' }}>{email}</p>
+            <p className="font-semibold mt-1" style={{ color: '#8A9B6E' }}>{values.email}</p>
           </div>
         </div>
       </div>
@@ -60,12 +60,13 @@ const RecuperarPassword = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="text-gray-600 font-semibold text-sm">Correo</label>
             <input
               type="email"
-              value={email}
+              name="email"
+              value={values.email}
               onChange={handleChange}
               className="p-3 border-2 border-gray-200 rounded-lg transition-all focus:outline-none"
               onFocus={(e) => {
@@ -78,19 +79,20 @@ const RecuperarPassword = () => {
               }}
               placeholder="20240096@ricaldone.edu.sv"
             />
-            {error && (
+            {errors.email && (
               <div className="text-red-500 text-xs mt-1">
-                {error}
+                {errors.email}
               </div>
             )}
           </div>
 
           <button 
             type="submit" 
-            className="text-white py-3 rounded-lg font-semibold transform hover:-translate-y-0.5 transition-all shadow-md"
+            disabled={isSubmitting}
+            className="text-white py-3 rounded-lg font-semibold transform hover:-translate-y-0.5 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'linear-gradient(135deg, #AEBC98 0%, #8A9B6E 100%)' }}
           >
-            Enviar Código
+            {isSubmitting ? 'Enviando...' : 'Enviar Código'}
           </button>
 
           <div className="text-center">

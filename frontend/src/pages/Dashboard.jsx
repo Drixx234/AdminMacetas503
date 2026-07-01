@@ -1,5 +1,6 @@
 import React from 'react';
 import MenuLateral from '../components/MenuLateral';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 const TrendingUpIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,19 +15,7 @@ const ChevronDownIcon = () => (
 );
 
 const Dashboard = ({ onLogout }) => {
-  const topProducts = [
-    { id: 1, product: 'Mini-8', fecha: 'Mayo 5', estatus: 'Revivido', precio: '$25.50', cliente: 'Maximiliano' },
-    { id: 2, product: 'Hexagonal', fecha: 'Junio 10', estatus: 'Revivido', precio: '$30.50', cliente: 'Serena' },
-    { id: 3, product: 'Buho pot', fecha: 'Diciembre 5', estatus: 'Revivido', precio: '$41.50', cliente: 'Francisca' },
-    { id: 4, product: 'Mini-8', fecha: 'Marzo 15', estatus: 'Revivido', precio: '$15.50', cliente: 'Ricardo D' }
-  ];
-
-  const recentOrders = [
-    { id: 1, product: 'Mini-8', fecha: 'Mayo 5', estatus: 'Revivido', precio: '$25.50', cliente: 'Maximiliano' },
-    { id: 2, product: 'Hexagonal', fecha: 'Junio 10', estatus: 'Revivido', precio: '$30.50', cliente: 'Serena' },
-    { id: 3, product: 'Buho pot', fecha: 'Diciembre 5', estatus: 'Revivido', precio: '$41.50', cliente: 'Francisca' },
-    { id: 4, product: 'Mini-8', fecha: 'Marzo 15', estatus: 'Revivido', precio: '$15.50', cliente: 'Ricardo D' }
-  ];
+  const { topProducts, recentOrders, stats, ventasCategoria, timeRange, setTimeRange } = useDashboardData();
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -41,7 +30,7 @@ const Dashboard = ({ onLogout }) => {
             </div>
             <div className="flex items-center space-x-4">
               <button className="flex items-center px-4 py-2 bg-gray-100 rounded-lg text-sm">
-                <span>Últimos 30 días</span>
+                <span>{timeRange}</span>
                 <ChevronDownIcon />
               </button>
             </div>
@@ -53,42 +42,42 @@ const Dashboard = ({ onLogout }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total Vendido</p>
-                <p className="text-2xl font-bold text-gray-800">$1,524</p>
+                <p className="text-2xl font-bold text-gray-800">{stats.totalVendido.value}</p>
               </div>
               <div className="flex items-center text-green-500 bg-green-50 px-2 py-1 rounded">
                 <TrendingUpIcon />
-                <span className="text-sm font-medium ml-1">10.5%</span>
+                <span className="text-sm font-medium ml-1">{stats.totalVendido.percentage}</span>
               </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Mas Esta Semana</p>
+            <p className="text-sm text-gray-500 mt-2">{stats.totalVendido.label}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total De Ordenes</p>
-                <p className="text-2xl font-bold text-gray-800">524</p>
+                <p className="text-2xl font-bold text-gray-800">{stats.totalOrdenes.value}</p>
               </div>
               <div className="flex items-center text-green-500 bg-green-50 px-2 py-1 rounded">
                 <TrendingUpIcon />
-                <span className="text-sm font-medium ml-1">15.5%</span>
+                <span className="text-sm font-medium ml-1">{stats.totalOrdenes.percentage}</span>
               </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Mas Esta Semana</p>
+            <p className="text-sm text-gray-500 mt-2">{stats.totalOrdenes.label}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total De Productos</p>
-                <p className="text-2xl font-bold text-gray-800">1,500</p>
+                <p className="text-2xl font-bold text-gray-800">{stats.totalProductos.value}</p>
               </div>
               <div className="flex items-center text-green-500 bg-green-50 px-2 py-1 rounded">
                 <TrendingUpIcon />
-                <span className="text-sm font-medium ml-1">15.5%</span>
+                <span className="text-sm font-medium ml-1">{stats.totalProductos.percentage}</span>
               </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Mas Esta Semana</p>
+            <p className="text-sm text-gray-500 mt-2">{stats.totalProductos.label}</p>
           </div>
         </div>
 
@@ -98,7 +87,7 @@ const Dashboard = ({ onLogout }) => {
             <div className="flex items-center justify-center h-48">
               <div className="w-48 h-48 rounded-full border-8 border-green-500 flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-800">$1,500.00</p>
+                  <p className="text-2xl font-bold text-gray-800">{ventasCategoria.total}</p>
                   <p className="text-sm text-gray-500">Total</p>
                 </div>
               </div>
@@ -116,19 +105,19 @@ const Dashboard = ({ onLogout }) => {
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">16,100</span>
-                  <span className="text-sm text-green-500">+45%</span>
+                  <span className="text-sm text-gray-600">{ventasCategoria.detalle[0].label}</span>
+                  <span className="text-sm text-green-500">{ventasCategoria.detalle[0].percentage}</span>
                 </div>
                 <div className="mt-1 h-2 bg-gray-200 rounded-full">
-                  <div className="h-2 bg-green-500 rounded-full" style={{ width: '75%' }}></div>
+                  <div className="h-2 bg-green-500 rounded-full" style={{ width: ventasCategoria.detalle[0].width }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Tiny Pots</span>
+                  <span className="text-sm text-gray-600">{ventasCategoria.detalle[1].label}</span>
                 </div>
                 <div className="mt-1 h-2 bg-gray-200 rounded-full">
-                  <div className="h-2 bg-blue-500 rounded-full" style={{ width: '45%' }}></div>
+                  <div className="h-2 bg-blue-500 rounded-full" style={{ width: ventasCategoria.detalle[1].width }}></div>
                 </div>
               </div>
             </div>

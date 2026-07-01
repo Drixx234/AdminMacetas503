@@ -1,42 +1,32 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCodeVerification } from '../hooks/useCodeVerification';
+import { useToast } from '../hooks/useToast';
 
 const VerificarCodigo = () => {
   const navigate = useNavigate();
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [error, setError] = useState('');
-  const inputRefs = [
-    useRef(), useRef(), useRef(), 
-    useRef(), useRef(), useRef()
-  ];
+  const { showError, showSuccess } = useToast(4000);
 
-  const handleChange = (index, value) => {
-    if (value.length > 1) return;
-    
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-
-    if (value && index < 5) {
-      inputRefs[index + 1].current.focus();
-    }
+  const handleSuccess = () => {
+    showSuccess('Código verificado correctamente');
+    setTimeout(() => {
+      navigate('/nueva-contrasena');
+    }, 500);
   };
 
-  const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs[index - 1].current.focus();
-    }
+  const handleError = () => {
+    showError('Código incorrecto. Por favor, intenta de nuevo.');
   };
+
+  const { code, error, inputRefs, handleChange, handleKeyDown, verifyCode } = useCodeVerification(
+    6,
+    handleSuccess,
+    handleError
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const verificationCode = code.join('');
-    
-    if (verificationCode === '123456') {
-      navigate('/nueva-contrasena');
-    } else {
-      setError('Código incorrecto');
-    }
+    verifyCode('123456');
   };
 
   return (

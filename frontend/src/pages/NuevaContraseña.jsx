@@ -1,55 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from '../hooks/useForm';
+import { useToast } from '../hooks/useToast';
 
 const NuevaContrasena = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const { showSuccess, showError } = useToast(4000);
+
+  const validate = (values) => {
+    const errors = {};
+    
+    if (!values.password) {
+      errors.password = 'La contraseña es requerida';
+    } else if (values.password.length < 6) {
+      errors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+    
+    if (!values.confirmPassword) {
+      errors.confirmPassword = 'Confirma tu contraseña';
+    } else if (values.password !== values.confirmPassword) {
+      errors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+    
+    return errors;
+  };
+
+  const { values, errors, handleChange, handleSubmit, isSubmitting } = useForm({
     password: '',
     confirmPassword: ''
-  });
-  const [errors, setErrors] = useState({});
+  }, validate);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-    }
-    
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirma tu contraseña';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-    
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newErrors = validateForm();
-    
-    if (Object.keys(newErrors).length === 0) {
+  const onSubmit = (formData) => {
+    // Simular guardado
+    console.log('Contraseña actualizada:', formData.password);
+    showSuccess('Contraseña actualizada exitosamente');
+    setTimeout(() => {
       navigate('/login');
-    } else {
-      setErrors(newErrors);
-    }
+    }, 1500);
   };
 
   return (
@@ -62,13 +49,13 @@ const NuevaContrasena = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="text-gray-600 font-semibold text-sm">Contraseña</label>
             <input
               type="password"
               name="password"
-              value={formData.password}
+              value={values.password}
               onChange={handleChange}
               className="p-3 border-2 border-gray-200 rounded-lg transition-all focus:outline-none"
               onFocus={(e) => {
@@ -93,7 +80,7 @@ const NuevaContrasena = () => {
             <input
               type="password"
               name="confirmPassword"
-              value={formData.confirmPassword}
+              value={values.confirmPassword}
               onChange={handleChange}
               className="p-3 border-2 border-gray-200 rounded-lg transition-all focus:outline-none"
               onFocus={(e) => {
@@ -115,10 +102,11 @@ const NuevaContrasena = () => {
 
           <button 
             type="submit" 
-            className="text-white py-3 rounded-lg font-semibold transform hover:-translate-y-0.5 transition-all shadow-md"
+            disabled={isSubmitting}
+            className="text-white py-3 rounded-lg font-semibold transform hover:-translate-y-0.5 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'linear-gradient(135deg, #AEBC98 0%, #8A9B6E 100%)' }}
           >
-            Crear Contraseña Nueva
+            {isSubmitting ? 'Guardando...' : 'Crear Contraseña Nueva'}
           </button>
         </form>
       </div>
