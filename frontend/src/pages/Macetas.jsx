@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import MenuLateral from '../components/MenuLateral';
-import AgregarMacetaModal from '../components/AgregarMacetaModal';
+import ModalAgregarProducto from '../components/ModalAgregarProducto';
+import { useCrud } from '../hooks/useCrud';
+import { useToast } from '../hooks/useToast';
 
 const SearchIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,10 +41,9 @@ const CheckIcon = () => (
 );
 
 const MacetasPage = ({ onLogout }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showModal, setShowModal] = useState(false);
-  const [macetas, setMacetas] = useState([
+  const { showSuccess } = useToast(3000);
+
+  const initialMacetas = [
     { 
       id: 1,
       nombre: 'Hexagonal', 
@@ -131,33 +132,56 @@ const MacetasPage = ({ onLogout }) => {
       stock: '65 ud',
       imagen: ''
     }
-  ]);
+  ];
 
-  const handleSaveMaceta = (newMaceta) => {
+  const macetaFields = [
+    { name: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Ej: Hexagonal', required: true, column: 'left' },
+    { name: 'dimensiones', label: 'Dimensiones', type: 'text', placeholder: '8.5 x 9 x 9cm', required: true, column: 'left' },
+    { name: 'peso', label: 'Peso (kg)', type: 'number', placeholder: '0.00', required: true, column: 'left' },
+    { name: 'precio', label: 'Precio', type: 'number', placeholder: '0.00', required: true, column: 'left' },
+    { name: 'stock', label: 'Existencias', type: 'number', placeholder: '0', required: true, column: 'left' },
+    { name: 'colores', label: 'Colores de Variación', type: 'colors', required: true, column: 'right' },
+    { name: 'descripcion', label: 'Descripción', type: 'textarea', placeholder: 'Escribe una descripción detallada......', required: true, column: 'right', rows: 4 },
+    { name: 'imagen', label: 'Imagen del producto', type: 'file', column: 'right' }
+  ];
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    currentPage,
+    setCurrentPage,
+    showModal,
+    setShowModal,
+    filteredData,
+    currentData,
+    totalPages,
+    startIndex,
+    itemsPerPage,
+    addItem,
+    deleteItem
+  } = useCrud(initialMacetas);
+
+  const handleSaveMaceta = (formData) => {
     const macetaToAdd = {
-      id: macetas.length + 1,
-      nombre: newMaceta.nombre,
-      descripcion: newMaceta.descripcion || 'Maceta nueva',
-      dimensiones: newMaceta.dimensiones,
-      peso: `${newMaceta.peso} kg`,
-      precio: `$${newMaceta.precio}`,
-      colores: 'Varios colores',
-      stock: `${newMaceta.stock} ud`,
+      nombre: formData.nombre,
+      descripcion: formData.descripcion || 'Maceta nueva',
+      dimensiones: formData.dimensiones,
+      peso: `${formData.peso} kg`,
+      precio: `$${formData.precio}`,
+      colores: formData.colores || 'Varios colores',
+      stock: `${formData.stock} ud`,
       imagen: ''
     };
-    setMacetas([...macetas, macetaToAdd]);
-    setShowModal(false);
+    addItem(macetaToAdd);
+    showSuccess('Maceta agregada exitosamente');
   };
 
-  const filteredData = macetas.filter(item =>
-    item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const itemsPerPage = 4;
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const handleDelete = (id) => {
+    if (window.confirm('¿Estás seguro de eliminar esta maceta?')) {
+      deleteItem(id);
+      showSuccess('Maceta eliminada exitosamente');
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -265,7 +289,10 @@ const MacetasPage = ({ onLogout }) => {
                           <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
                             <EditIcon />
                           </button>
-                          <button className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
+                          <button 
+                            onClick={() => handleDelete(item.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
                             <DeleteIcon />
                           </button>
                         </div>
@@ -330,10 +357,13 @@ const MacetasPage = ({ onLogout }) => {
         </div>
       </div>
 
-      <AgregarMacetaModal
+      <ModalAgregarProducto
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onSave={handleSaveMaceta}
+        title="AGREGAR MACETA NUEVA"
+        buttonText="Guardar Maceta"
+        fields={macetaFields}
       />
     </div>
   );

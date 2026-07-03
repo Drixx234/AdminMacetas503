@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import MenuLateral from '../components/MenuLateral';
-import AgregarVelaModal from '../components/AgregarVelasModal';
+import ModalAgregarProducto from '../components/ModalAgregarProducto';
+import { useCrud } from '../hooks/useCrud';
+import { useToast } from '../hooks/useToast';
 
 const SearchIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,12 +47,9 @@ const XIcon = () => (
 );
 
 const VelasPage = ({ onLogout }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showModal, setShowModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('todos');
+  const { showSuccess } = useToast(3000);
 
-  const [velas, setVelas] = useState([
+  const initialVelas = [
     {
       id: 1,
       nombre: 'Arbol Navideño',
@@ -147,39 +146,59 @@ const VelasPage = ({ onLogout }) => {
       imagen: '',
       status: 'En proceso'
     }
-  ]);
+  ];
 
-  const handleSaveVela = (newVela) => {
+  const velaFields = [
+    { name: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Ej: Vela Aromática', required: true, column: 'left' },
+    { name: 'aroma', label: 'Aroma', type: 'text', placeholder: 'Ej: Lavanda', required: true, column: 'left' },
+    { name: 'tamaño', label: 'Tamaño', type: 'text', placeholder: '12 x 7.5cm', required: true, column: 'left' },
+    { name: 'precio', label: 'Precio', type: 'number', placeholder: '0.00', required: true, column: 'left' },
+    { name: 'stock', label: 'Existencias', type: 'number', placeholder: '0', required: true, column: 'left' },
+    { name: 'colores', label: 'Colores de Variación', type: 'colors', required: true, column: 'right' },
+    { name: 'descripcion', label: 'Descripción', type: 'textarea', placeholder: 'Escribe una descripción detallada......', required: true, column: 'right', rows: 4 },
+    { name: 'imagen', label: 'Imagen del producto', type: 'file', column: 'right' }
+  ];
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filter,
+    setFilter,
+    currentPage,
+    setCurrentPage,
+    showModal,
+    setShowModal,
+    filteredData,
+    currentData,
+    totalPages,
+    startIndex,
+    itemsPerPage,
+    addItem,
+    deleteItem
+  } = useCrud(initialVelas);
+
+  const handleSaveVela = (formData) => {
     const velaToAdd = {
-      id: velas.length + 1,
-      nombre: newVela.nombre,
-      descripcion: newVela.descripcion || 'Vela nueva',
-      aroma: newVela.aroma || 'Sin aroma',
-      tamaño: newVela.tamaño || '10 x 10cm',
-      precio: `$${newVela.precio}`,
-      colores: 'Varios colores',
-      stock: `${newVela.stock} ud`,
+      nombre: formData.nombre,
+      descripcion: formData.descripcion || 'Vela nueva',
+      aroma: formData.aroma || 'Sin aroma',
+      tamaño: formData.tamaño || '10 x 10cm',
+      precio: `$${formData.precio}`,
+      colores: formData.colores || 'Varios colores',
+      stock: `${formData.stock} ud`,
       imagen: '',
       status: 'Pendiente'
     };
-    setVelas([...velas, velaToAdd]);
-    setShowModal(false);
+    addItem(velaToAdd);
+    showSuccess('Vela agregada exitosamente');
   };
 
-  const filteredData = velas.filter(item => {
-    const matchesSearch = item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.aroma.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'todos' || item.status === filterStatus;
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  const itemsPerPage = 4;
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const handleDelete = (id) => {
+    if (window.confirm('¿Estás seguro de eliminar esta vela?')) {
+      deleteItem(id);
+      showSuccess('Vela eliminada exitosamente');
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -266,9 +285,9 @@ const VelasPage = ({ onLogout }) => {
             
             <div className="flex space-x-2">
               <button
-                onClick={() => { setFilterStatus('todos'); setCurrentPage(1); }}
+                onClick={() => { setFilter('todos'); setCurrentPage(1); }}
                 className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filterStatus === 'todos'
+                  filter === 'todos'
                     ? 'bg-green-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -276,9 +295,9 @@ const VelasPage = ({ onLogout }) => {
                 Todas
               </button>
               <button
-                onClick={() => { setFilterStatus('Pendiente'); setCurrentPage(1); }}
+                onClick={() => { setFilter('Pendiente'); setCurrentPage(1); }}
                 className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filterStatus === 'Pendiente'
+                  filter === 'Pendiente'
                     ? 'bg-yellow-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -286,9 +305,9 @@ const VelasPage = ({ onLogout }) => {
                 Pendiente
               </button>
               <button
-                onClick={() => { setFilterStatus('En proceso'); setCurrentPage(1); }}
+                onClick={() => { setFilter('En proceso'); setCurrentPage(1); }}
                 className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filterStatus === 'En proceso'
+                  filter === 'En proceso'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -296,9 +315,9 @@ const VelasPage = ({ onLogout }) => {
                 En proceso
               </button>
               <button
-                onClick={() => { setFilterStatus('Entregado'); setCurrentPage(1); }}
+                onClick={() => { setFilter('Entregado'); setCurrentPage(1); }}
                 className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filterStatus === 'Entregado'
+                  filter === 'Entregado'
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -342,7 +361,10 @@ const VelasPage = ({ onLogout }) => {
                           <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
                             <EditIcon />
                           </button>
-                          <button className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
+                          <button 
+                            onClick={() => handleDelete(item.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
                             <DeleteIcon />
                           </button>
                         </div>
@@ -407,10 +429,13 @@ const VelasPage = ({ onLogout }) => {
         </div>
       </div>
 
-      <AgregarVelaModal
+      <ModalAgregarProducto
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onSave={handleSaveVela}
+        title="AGREGAR VELA NUEVA"
+        buttonText="Guardar Vela"
+        fields={velaFields}
       />
     </div>
   );

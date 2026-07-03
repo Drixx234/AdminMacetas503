@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const HomeIcon = () => (
@@ -78,10 +78,18 @@ const LogOutIcon = () => (
 const MenuLateral = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [openSubmenu, setOpenSubmenu] = useState(false);
 
   const menuItems = [
     { icon: HomeIcon, label: 'Dashboard', path: '/dashboard' },
-    { icon: ShoppingBagIcon, label: 'Ordenes', path: '/ordenes' },
+    { 
+      icon: ShoppingBagIcon, 
+      label: 'Ordenes', 
+      path: '/ordenes',
+      submenu: [
+        { label: 'Ordenes Personalizadas', path: '/ordenes-personalizadas' }
+      ]
+    },
     { icon: Flower2Icon, label: 'Macetas', path: '/macetas' },
     { icon: CandleIcon, label: 'Velas', path: '/velas' },
     { icon: SproutIcon, label: 'Plantas', path: '/plantas' },
@@ -94,7 +102,14 @@ const MenuLateral = ({ onLogout }) => {
   ];
 
   const handleNavigation = (path) => {
-    navigate(path);
+    // Si es Ordenes, abrir/cerrar submenú
+    if (path === '/ordenes') {
+      setOpenSubmenu(!openSubmenu);
+      navigate(path);
+    } else {
+      setOpenSubmenu(false);
+      navigate(path);
+    }
   };
 
   const handleLogout = () => {
@@ -102,6 +117,10 @@ const MenuLateral = ({ onLogout }) => {
       onLogout();
     }
     navigate('/login');
+  };
+
+  const toggleSubmenu = () => {
+    setOpenSubmenu(!openSubmenu);
   };
 
   return (
@@ -114,6 +133,52 @@ const MenuLateral = ({ onLogout }) => {
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
+          const hasSubmenu = item.submenu && item.submenu.length > 0;
+          const isSubmenuActive = hasSubmenu && item.submenu.some(sub => location.pathname === sub.path);
+          
+          if (hasSubmenu) {
+            return (
+              <div key={index}>
+                <button
+                  onClick={() => handleNavigation(item.path)}
+                  className={`w-full flex items-center justify-between px-6 py-3 text-sm transition-colors text-left ${
+                    isActive || isSubmenuActive || openSubmenu
+                      ? 'bg-green-50 text-green-700 border-r-4 border-green-700' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <Icon />
+                    <span className="ml-3">{item.label}</span>
+                  </div>
+                  <svg className={`w-4 h-4 transition-transform ${openSubmenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {openSubmenu && (
+                  <div className="ml-8">
+                    {item.submenu.map((sub, subIndex) => (
+                      <button
+                        key={subIndex}
+                        onClick={() => {
+                          setOpenSubmenu(true);
+                          navigate(sub.path);
+                        }}
+                        className={`w-full flex items-center px-6 py-2 text-sm transition-colors text-left ${
+                          location.pathname === sub.path
+                            ? 'text-green-700 bg-green-50'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        <span className="ml-3">{sub.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <button
               key={index}
