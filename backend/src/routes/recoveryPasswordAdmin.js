@@ -1,5 +1,5 @@
 import express from "express";
-import recoveryPasswordAdminController from "../controller/registerAdminController.js";
+import recoveryPasswordAdminController from "../controller/recoveyPasswordAdmin.js";
 
 const router = express.Router();
 

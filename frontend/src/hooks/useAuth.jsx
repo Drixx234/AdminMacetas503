@@ -1,65 +1,57 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loginAdminRequest, registerAdminRequest } from '../api/authApi';
 
 export const useAuth = () => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const login = (email, password) => {
+  const login = async (email, password) => {
     setLoading(true);
     setError('');
-    
-    // Simular autenticación
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (password === '123456') {
-          const userData = { email, name: 'Administrador' };
-          setUser(userData);
-          setIsAuthenticated(true);
-          localStorage.setItem('token', 'fake-token');
-          localStorage.setItem('user', JSON.stringify(userData));
-          setLoading(false);
-          navigate('/dashboard');
-          resolve(userData);
-        } else {
-          setError('Contraseña incorrecta');
-          setLoading(false);
-          reject('Contraseña incorrecta');
-        }
-      }, 500);
-    });
+    try {
+      const data = await loginAdminRequest(email, password);
+      setLoading(false);
+      navigate('/dashboard');
+      return data;
+    } catch (err) {
+      setError(err.message || 'Credenciales incorrectas');
+      setLoading(false);
+      throw err;
+    }
+  };
+
+  const register = async (data) => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await registerAdminRequest(data);
+
+      // guardamos el email y marcamos el contexto para que /verificar sepa qué endpoint usar
+      localStorage.setItem('verifyEmail', data.email);
+      localStorage.setItem('verifyContext', 'register');
+
+      setLoading(false);
+      navigate('/verificar');
+      return result;
+    } catch (err) {
+      setError(err.message || 'No se pudo completar el registro');
+      setLoading(false);
+      throw err;
+    }
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     navigate('/login');
   };
 
-  const checkAuth = () => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-      return true;
-    }
-    return false;
-  };
-
   return {
-    isAuthenticated,
-    user,
     loading,
     error,
     login,
+    register,
     logout,
-    checkAuth,
     setError
   };
 };

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '../hooks/useForm';
 import { useToast } from '../hooks/useToast';
+import { recoveryAdminRequest } from '../api/authApi';
 
 const RecuperarPassword = () => {
   const navigate = useNavigate();
@@ -23,12 +24,19 @@ const RecuperarPassword = () => {
 
   const [success, setSuccess] = React.useState(false);
 
-  const onSubmit = (formData) => {
-    setSuccess(true);
-    showSuccess(`Código enviado a ${formData.email}`);
-    setTimeout(() => {
-      navigate('/verificar');
-    }, 1500);
+  const onSubmit = async (formData) => {
+    try {
+      await recoveryAdminRequest(formData.email);
+      localStorage.setItem('verifyEmail', formData.email);
+      localStorage.setItem('verifyContext', 'recovery');
+      setSuccess(true);
+      showSuccess(`Código enviado a ${formData.email}`);
+      setTimeout(() => {
+        navigate('/verificar');
+      }, 1500);
+    } catch (err) {
+      showError(err.message || 'No se pudo enviar el código.');
+    }
   };
 
   if (success) {

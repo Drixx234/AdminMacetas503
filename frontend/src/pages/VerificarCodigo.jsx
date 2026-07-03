@@ -1,36 +1,82 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCodeVerification } from '../hooks/useCodeVerification';
 import { useToast } from '../hooks/useToast';
+import { verifyCodeAdminRequest, recoveryVerifyCodeAdminRequest } from '../api/authApi';
 
 const VerificarCodigo = () => {
   const navigate = useNavigate();
-  const { showError, showSuccess } = useToast(4000);
+  const { toasts, showError, showSuccess } = useToast(4000);
+  const [code, setCode] = React.useState(Array(6).fill(''));
+  const inputRefs = Array.from({ length: 6 }, () => React.useRef());
 
-  const handleSuccess = () => {
-    showSuccess('Código verificado correctamente');
-    setTimeout(() => {
-      navigate('/nueva-contrasena');
-    }, 500);
+  const handleChange = (index, value) => {
+    if (value.length > 1) return;
+    const upper = value.toUpperCase();
+    const newCode = [...code];
+    newCode[index] = upper;
+    setCode(newCode);
+    if (upper && index < 5) {
+      inputRefs[index + 1].current.focus();
+    }
   };
 
-  const handleError = () => {
-    showError('Código incorrecto. Por favor, intenta de nuevo.');
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      inputRefs[index - 1].current.focus();
+    }
   };
 
-  const { code, error, inputRefs, handleChange, handleKeyDown, verifyCode } = useCodeVerification(
-    6,
-    handleSuccess,
-    handleError
-  );
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    verifyCode('123456');
+    const fullCode = code.join('');
+
+    if (fullCode.length < 6) {
+      showError('Ingresa los 6 caracteres del código.');
+      return;
+    }
+
+    const context = localStorage.getItem('verifyContext'); // 'register' | 'recovery'
+
+    try {
+      if (context === 'recovery') {
+        await recoveryVerifyCodeAdminRequest(fullCode);
+      } else {
+        await verifyCodeAdminRequest(fullCode);
+      }
+
+      showSuccess('Código verificado correctamente');
+
+      if (context === 'register') {
+        localStorage.removeItem('verifyEmail');
+        localStorage.removeItem('verifyContext');
+        setTimeout(() => navigate('/login'), 500);
+      } else {
+        // dejamos verifyContext hasta terminar el flujo de nueva contraseña
+        setTimeout(() => navigate('/nueva-contrasena'), 500);
+      }
+    } catch (err) {
+      showError(err.message || 'Código incorrecto. Por favor, intenta de nuevo.');
+    }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen" style={{ background: 'linear-gradient(135deg, #AEBC98 0%, #8A9B6E 100%)' }}>
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`px-6 py-3 rounded-lg shadow-lg font-medium transition-all transform animate-slide-in ${
+              toast.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+              toast.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+              'bg-blue-50 text-blue-700 border border-blue-200'
+            }`}
+            style={{ minWidth: '280px' }}
+          >
+            {toast.message}
+          </div>
+        ))}
+      </div>
+
       <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md">
         <div className="text-center mb-8">
           <h2 className="text-gray-800 text-3xl font-bold mb-2">Ingresa el Código</h2>
@@ -42,38 +88,25 @@ const VerificarCodigo = () => {
             <label className="text-gray-600 font-semibold text-sm text-center">
               Código de Verificación
             </label>
-            <div className="flex justify-center gap-3">
-              {code.map((digit, index) => (
+            <div className="flex justify-center gap-2">
+              {code.map((char, index) => (
                 <input
                   key={index}
                   type="text"
                   maxLength="1"
-                  value={digit}
+                  value={char}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   ref={inputRefs[index]}
-                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-xl transition-all placeholder:text-gray-300 focus:outline-none"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#AEBC98';
-                    e.target.style.boxShadow = '0 0 0 2px rgba(174, 188, 152, 0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e2e8f0';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  placeholder="0"
+                  className="w-11 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-xl transition-all placeholder:text-gray-300 focus:outline-none"
+                  placeholder="-"
                 />
               ))}
             </div>
-            {error && (
-              <div className="text-red-500 text-sm text-center">
-                {error}
-              </div>
-            )}
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="text-white py-3 rounded-lg font-semibold transform hover:-translate-y-0.5 transition-all shadow-md"
             style={{ background: 'linear-gradient(135deg, #AEBC98 0%, #8A9B6E 100%)' }}
           >
@@ -81,8 +114,8 @@ const VerificarCodigo = () => {
           </button>
 
           <div className="text-center">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="bg-none border-none cursor-pointer text-sm underline transition-colors"
               style={{ color: '#8A9B6E' }}
               onClick={() => navigate('/login')}

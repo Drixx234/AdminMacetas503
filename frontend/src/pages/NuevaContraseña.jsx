@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '../hooks/useForm';
 import { useToast } from '../hooks/useToast';
+import { newPasswordAdminRequest } from '../api/authApi';
 
 const NuevaContrasena = () => {
   const navigate = useNavigate();
@@ -30,13 +31,18 @@ const NuevaContrasena = () => {
     confirmPassword: ''
   }, validate);
 
-  const onSubmit = (formData) => {
-    // Simular guardado
-    console.log('Contraseña actualizada:', formData.password);
-    showSuccess('Contraseña actualizada exitosamente');
-    setTimeout(() => {
-      navigate('/login');
-    }, 1500);
+  const onSubmit = async (formData) => {
+    try {
+      await newPasswordAdminRequest(formData.password, formData.confirmPassword);
+      localStorage.removeItem('verifyEmail');
+      localStorage.removeItem('verifyContext');
+      showSuccess('Contraseña actualizada exitosamente');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } catch (err) {
+      showError(err.message || 'No se pudo actualizar la contraseña.');
+    }
   };
 
   return (

@@ -10,6 +10,7 @@ import plantsRoutes from "./src/routes/plants.js"
 //import rutas de admin
 import registerAdminRoutes from "./src/routes/registerAdmin.js"
 import loginAdminRoutes from "./src/routes/loginAdmin.js"
+import recoveryPasswordAdminRoutes from "./src/routes/recoveryPasswordAdmin.js"
 
 //import rutas de candles
 import candlesRoutes from "./src/routes/candles.js"
@@ -56,6 +57,7 @@ app.use("/api/clients", clientRoutes);
 //rutas de admin
 app.use("/api/registerAdmin", registerAdminRoutes);
 app.use("/api/loginAdmin", loginAdminRoutes);
+app.use("/api/recoveryPasswordAdmin", recoveryPasswordAdminRoutes);
 
 //rutas de candles
 app.use("/api/candles", candlesRoutes);

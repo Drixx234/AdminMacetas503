@@ -3,19 +3,18 @@ import crypto from "crypto"; //genera tokens aleatorios
 import jsonwebtoken from "jsonwebtoken"; //genera tokens JWT para autenticación
 import bcryptjs from "bcryptjs"; //hashea contraseñas
 
+import HTMLRegisterEmail from "../utils/sendMaildRegisterAdmin.js";
 
-import HTMLRegisterEmail from "../utils/sendMaildRegisterAdmin.js"; //plantilla HTML para el correo de registro
+import config from "../../config.js";
 
-import  config  from "../../config.js"; //importa configuración del proyecto, como la clave secreta para JWT
-
-import adminModel from "../models/admin.js"; //modelo de cliente para interactuar con la base de datos
+import adminModel from "../models/admin.js";
 
 const registerAdminController = {};
 
 registerAdminController.register = async (req, res) => {
     try {
         //solicitar datos
-        const { name, email, password, isVerified} = req.body;
+        const { name, email, password } = req.body;
 
         //validar si ya existe
         const existingAdmin = await adminModel.findOne({ email });
@@ -25,18 +24,17 @@ registerAdminController.register = async (req, res) => {
 
         //encriptar contraseña
         const passwordHashed = await bcryptjs.hash(password, 10);
-        
-        //generar un codigo aleatorio
-        const randomCode = crypto.randomBytes(3).toString("hex");
+
+        //generar un codigo aleatorio (normalizado a mayúsculas)
+        const randomCode = crypto.randomBytes(3).toString("hex").toUpperCase();
 
         //guardar todo en un token
         const token = jsonwebtoken.sign(
-            { 
+            {
                 randomCode,
                 name,
                 email,
                 password: passwordHashed,
-                isVerified,
             },
             //secret key
             config.JWT.secret,
@@ -45,7 +43,7 @@ registerAdminController.register = async (req, res) => {
         );
 
         //guardar el token en una cookie
-        res.cookie("registrationCookie", token, {maxAge: 15 * 60 * 1000});
+        res.cookie("registrationCookie", token, { maxAge: 15 * 60 * 1000 });
 
         //enviar el correo con el codigo de verificacion
         const transporter = nodemailer.createTransport({
@@ -56,7 +54,6 @@ registerAdminController.register = async (req, res) => {
             }
         });
 
-        //mail options ¿quien lo recibe y como?
         const mailOptions = {
             from: config.email.user_email,
             to: email,
@@ -65,17 +62,16 @@ registerAdminController.register = async (req, res) => {
             html: HTMLRegisterEmail(randomCode)
         };
 
-         //3. Enviar el correo
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.log(error)
                 return res.status(500).json({ message: 'Error sending email' });
-            }                return res.status(200).json({ message: 'Email sent successfully' });
+            }
+            return res.status(200).json({ message: 'Email sent successfully', email });
         });
 
-
     } catch (error) {
-        console.log("error"+ error);
+        console.log("error" + error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }
@@ -84,19 +80,33 @@ registerAdminController.register = async (req, res) => {
 registerAdminController.verifyCode = async (req, res) => {
     try {
 
-        //1. Solicitar el código de verificación en el frontend
-        const { verificationCodeRequest} = req.body;
+        //1. Solicitar el código de verificación enviado por el frontend
+        const { code } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ message: 'El código es obligatorio' });
+        }
 
         //2. Obtener el token de la cookie
-        const token = req.cookies.registrationCookie
+        const token = req.cookies.registrationCookie;
 
-        //extraer la información del token
-        const decoded = jsonwebtoken.verify(token, config.JWT.secret);
+        if (!token) {
+            return res.status(400).json({ message: 'No hay un registro pendiente. Vuelve a registrarte.' });
+        }
 
-        const { randomCode, name, email, password, isVerified, } = decoded;
+        //extraer la información del token (puede fallar si expiró o es inválido)
+        let decoded;
+        try {
+            decoded = jsonwebtoken.verify(token, config.JWT.secret);
+        } catch (err) {
+            res.clearCookie("registrationCookie");
+            return res.status(400).json({ message: 'El código expiró. Vuelve a registrarte.' });
+        }
 
-        //3. Comparar el código de verificación con el código generado
-        if (verificationCodeRequest !== randomCode) {
+        const { randomCode, name, email, password } = decoded;
+
+        //3. Comparar el código de verificación con el código generado (sin distinguir mayúsculas/minúsculas)
+        if (code.toUpperCase() !== randomCode) {
             return res.status(400).json({ message: 'Código de verificación incorrecto' });
         }
 
@@ -114,7 +124,7 @@ registerAdminController.verifyCode = async (req, res) => {
         res.clearCookie("registrationCookie");
 
         return res.status(200).json({ message: 'Administrador registrado exitosamente' });
-        
+
     } catch (error) {
         console.log("error", error);
         res.status(500).json({ message: 'Internal Server Error' });

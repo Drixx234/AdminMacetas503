@@ -150,6 +150,16 @@ const Login = () => {
               >
                 ¿Olvidaste tu contraseña?
               </button>
+              <div className="text-center mt-2">
+              <button
+                type="button"
+                className="bg-none border-none cursor-pointer text-sm underline transition-colors"
+                style={{ color: '#8A9B6E' }}
+                onClick={() => navigate('/registro')}
+              >
+                ¿No tienes cuenta? Regístrate
+              </button>
+            </div>
             </div>
           </form>
         </div>
