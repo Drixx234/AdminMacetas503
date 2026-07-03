@@ -30,7 +30,7 @@ offersController.create = async (req, res) => {
             stock,
             image: req.file.path,
             public_id: req.file.filename,
-            isActive: true
+            status: true
         });
         await newOffer.save();
 
@@ -65,13 +65,15 @@ offersController.delete = async (req, res) => {
 offersController.update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, discount, ofert_price, stock } = req.body;
+        const { title, description, discount, ofert_price, stock, status } = req.body;
         const offerToUpdate = await offersModel.findById(id);
 
         if (!offerToUpdate) {
             return res.status(404).json({ message: 'Offer not found' });
         }
-       
+
+        const updatedData = { title, description, discount, ofert_price, stock, status };
+
         //si viene alguna imagen
         if(req.file){
             //eliminar la imagen anterior
@@ -83,11 +85,11 @@ offersController.update = async (req, res) => {
         }
 
         //actualizo en la base de datos
-        await offersModel.findByIdAndUpdate(req.params.id,
+        const updatedOffer = await offersModel.findByIdAndUpdate(id,
             updatedData,
             {new: true});
 
-        return res.status(200).json({message: "Offer updated"})
+        return res.status(200).json({ message: "Offer updated", offer: updatedOffer })
     } catch (error) {
         console.log("error"+ error);
         res.status(500).json({ message: 'Internal Server Error' });

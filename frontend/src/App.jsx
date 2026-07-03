@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import MacetasPage from './pages/Macetas';
 import VelasPage from './pages/Velas';
 import PlantasPage from './pages/Plantas';
+import OfertasPage from './pages/Ofertas';
 import AjustesPage from './pages/Ajustes';
 import InventarioPage from './pages/Inventario';
 import ReportesPage from './pages/Reportes';
@@ -33,6 +34,7 @@ function App() {
         <Route path="/macetas" element={<MacetasPage />} />
         <Route path="/velas" element={<VelasPage />} />
         <Route path="/plantas" element={<PlantasPage />} />
+        <Route path="/ofertas" element={<OfertasPage />} />
         <Route path="/inventario" element={<InventarioPage />} />
         <Route path="/reportes" element={<ReportesPage />} />
         <Route path="/ajustes" element={<AjustesPage />} />
