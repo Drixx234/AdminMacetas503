@@ -65,13 +65,15 @@ candlesController.delete = async (req, res) => {
 candlesController.update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, price, stock, color} = req.body;
+        const { name, description, scent, size, price, stock, color } = req.body;
         const candleToUpdate = await candleModel.findById(id);
 
         if (!candleToUpdate) {
             return res.status(404).json({ message: 'Candle not found' });
         }
-       
+
+        const updatedData = { name, description, scent, size, price, stock, color };
+
         //si viene alguna imagen
         if(req.file){
             //eliminar la imagen anterior
@@ -83,11 +85,11 @@ candlesController.update = async (req, res) => {
         }
 
         //actualizo en la base de datos
-        await candleModel.findByIdAndUpdate(req.params.id,
+        const updatedCandle = await candleModel.findByIdAndUpdate(id,
             updatedData,
             {new: true});
 
-        return res.status(200).json({message: "Candle updated"})
+        return res.status(200).json({ message: "Candle updated", candle: updatedCandle })
     } catch (error) {
         console.log("error"+ error);
         res.status(500).json({ message: 'Internal Server Error' });

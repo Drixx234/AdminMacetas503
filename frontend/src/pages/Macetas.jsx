@@ -3,6 +3,7 @@ import MenuLateral from '../components/MenuLateral';
 import ModalAgregarProducto from '../components/ModalAgregarProducto';
 import { useCrud } from '../hooks/useCrud';
 import { useToast } from '../hooks/useToast';
+import { getPosts, createPost, updatePost, deletePost } from '../api/postApi';
 
 const SearchIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,219 +23,111 @@ const DeleteIcon = () => (
   </svg>
 );
 
-const PackageIcon2 = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-  </svg>
-);
+// Campos del formulario: los "name" DEBEN coincidir exactamente con el modelo
+// backend/src/models/post.js (name, description, dimensions, weight, price, stock, color, image)
+const macetaFields = [
+  { name: 'name', label: 'Nombre', type: 'text', placeholder: 'Ej: Hexagonal', required: true, column: 'left' },
+  { name: 'dimensions', label: 'Dimensiones', type: 'text', placeholder: '8.5 x 9 x 9cm', required: true, column: 'left' },
+  { name: 'weight', label: 'Peso', type: 'text', placeholder: '1.65 kg', required: true, column: 'left' },
+  { name: 'price', label: 'Precio', type: 'number', placeholder: '0.00', required: true, column: 'left' },
+  { name: 'stock', label: 'Existencias', type: 'number', placeholder: '0', required: true, column: 'left' },
+  { name: 'color', label: 'Color', type: 'text', placeholder: 'Ej: Terracota, Blanco', required: true, column: 'right' },
+  { name: 'description', label: 'Descripción', type: 'textarea', placeholder: 'Escribe una descripción detallada......', required: true, column: 'right', rows: 4 },
+  { name: 'image', label: 'Imagen del producto', type: 'file', column: 'right' }
+];
 
-const ClockIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
+const postApi = {
+  getAll: getPosts,
+  create: createPost,
+  update: updatePost,
+  remove: deletePost
+};
 
 const MacetasPage = ({ onLogout }) => {
-  const { showSuccess } = useToast(3000);
-
-  const initialMacetas = [
-    { 
-      id: 1,
-      nombre: 'Hexagonal', 
-      descripcion: 'Maceta con forma hexagonal', 
-      dimensiones: '8.5 x 9 x 9cm', 
-      peso: '1.65 kg', 
-      precio: '$2.00', 
-      colores: 'Terracota, Blanco', 
-      stock: '65 ud',
-      imagen: ''
-    },
-    { 
-      id: 2,
-      nombre: 'Hexagonal', 
-      descripcion: 'Maceta con forma hexagonal', 
-      dimensiones: '8.5 x 9 x 9cm', 
-      peso: '1.65 kg', 
-      precio: '$2.00', 
-      colores: 'Terracota, Blanco', 
-      stock: '65 ud',
-      imagen: ''
-    },
-    { 
-      id: 3,
-      nombre: 'Hexagonal', 
-      descripcion: 'Maceta con forma hexagonal', 
-      dimensiones: '8.5 x 9 x 9cm', 
-      peso: '1.65 kg', 
-      precio: '$2.00', 
-      colores: 'Terracota, Blanco', 
-      stock: '65 ud',
-      imagen: ''
-    },
-    { 
-      id: 4,
-      nombre: 'Hexagonal', 
-      descripcion: 'Maceta con forma hexagonal', 
-      dimensiones: '8.5 x 9 x 9cm', 
-      peso: '1.65 kg', 
-      precio: '$2.00', 
-      colores: 'Terracota, Blanco', 
-      stock: '65 ud',
-      imagen: ''
-    },
-    { 
-      id: 5,
-      nombre: 'Cilíndrica', 
-      descripcion: 'Maceta cilíndrica moderna', 
-      dimensiones: '10 x 10 x 12cm', 
-      peso: '1.80 kg', 
-      precio: '$3.50', 
-      colores: 'Gris, Negro', 
-      stock: '42 ud',
-      imagen: ''
-    },
-    { 
-      id: 6,
-      nombre: 'Cuadrada', 
-      descripcion: 'Maceta cuadrada minimalista', 
-      dimensiones: '7 x 7 x 8cm', 
-      peso: '1.20 kg', 
-      precio: '$1.80', 
-      colores: 'Blanco, Beige', 
-      stock: '89 ud',
-      imagen: ''
-    },
-    { 
-      id: 7,
-      nombre: 'Redonda', 
-      descripcion: 'Maceta redonda clásica', 
-      dimensiones: '9 x 9 x 10cm', 
-      peso: '1.40 kg', 
-      precio: '$2.20', 
-      colores: 'Terracota', 
-      stock: '73 ud',
-      imagen: ''
-    },
-    { 
-      id: 8,
-      nombre: 'Hexagonal', 
-      descripcion: 'Maceta con forma hexagonal', 
-      dimensiones: '8.5 x 9 x 9cm', 
-      peso: '1.65 kg', 
-      precio: '$2.00', 
-      colores: 'Terracota, Blanco', 
-      stock: '65 ud',
-      imagen: ''
-    }
-  ];
-
-  const macetaFields = [
-    { name: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Ej: Hexagonal', required: true, column: 'left' },
-    { name: 'dimensiones', label: 'Dimensiones', type: 'text', placeholder: '8.5 x 9 x 9cm', required: true, column: 'left' },
-    { name: 'peso', label: 'Peso (kg)', type: 'number', placeholder: '0.00', required: true, column: 'left' },
-    { name: 'precio', label: 'Precio', type: 'number', placeholder: '0.00', required: true, column: 'left' },
-    { name: 'stock', label: 'Existencias', type: 'number', placeholder: '0', required: true, column: 'left' },
-    { name: 'colores', label: 'Colores de Variación', type: 'colors', required: true, column: 'right' },
-    { name: 'descripcion', label: 'Descripción', type: 'textarea', placeholder: 'Escribe una descripción detallada......', required: true, column: 'right', rows: 4 },
-    { name: 'imagen', label: 'Imagen del producto', type: 'file', column: 'right' }
-  ];
+  const { showSuccess, showError } = useToast(3000);
 
   const {
+    loading,
+    error,
     searchTerm,
     setSearchTerm,
     currentPage,
     setCurrentPage,
     showModal,
-    setShowModal,
+    editingItem,
     filteredData,
     currentData,
     totalPages,
     startIndex,
     itemsPerPage,
     addItem,
-    deleteItem
-  } = useCrud(initialMacetas);
+    updateItem,
+    deleteItem,
+    openModal,
+    closeModal
+  } = useCrud(postApi);
 
-  const handleSaveMaceta = (formData) => {
-    const macetaToAdd = {
-      nombre: formData.nombre,
-      descripcion: formData.descripcion || 'Maceta nueva',
-      dimensiones: formData.dimensiones,
-      peso: `${formData.peso} kg`,
-      precio: `$${formData.precio}`,
-      colores: formData.colores || 'Varios colores',
-      stock: `${formData.stock} ud`,
-      imagen: ''
-    };
-    addItem(macetaToAdd);
-    showSuccess('Maceta agregada exitosamente');
+  const buildFormData = (values) => {
+    const fd = new FormData();
+    fd.append('name', values.name);
+    fd.append('description', values.description);
+    fd.append('dimensions', values.dimensions);
+    fd.append('weight', values.weight);
+    fd.append('price', values.price);
+    fd.append('stock', values.stock);
+    fd.append('color', values.color);
+    if (values.image instanceof File) {
+      fd.append('image', values.image);
+    }
+    return fd;
   };
 
-  const handleDelete = (id) => {
+  const handleSaveMaceta = async (formValues) => {
+    try {
+      const fd = buildFormData(formValues);
+      if (editingItem) {
+        await updateItem(editingItem._id, fd);
+        showSuccess('Maceta actualizada exitosamente');
+      } else {
+        await addItem(fd);
+        showSuccess('Maceta agregada exitosamente');
+      }
+    } catch (err) {
+      showError(err.message || 'No se pudo guardar la maceta');
+    }
+  };
+
+  const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar esta maceta?')) {
-      deleteItem(id);
-      showSuccess('Maceta eliminada exitosamente');
+      try {
+        await deleteItem(id);
+        showSuccess('Maceta eliminada exitosamente');
+      } catch (err) {
+        showError(err.message || 'No se pudo eliminar la maceta');
+      }
     }
   };
 
   return (
     <div className="flex h-screen bg-gray-100">
       <MenuLateral onLogout={onLogout} />
-      
+
       <div className="flex-1 overflow-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">Macetas</h2>
-          <button 
-            onClick={() => setShowModal(true)}
+          <button
+            onClick={() => openModal(null)}
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors"
           >
             <span>+ Agregar maceta</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Nuevas Ordenes</p>
-                <p className="text-2xl font-bold text-gray-800">90</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                <PackageIcon2 />
-              </div>
-            </div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+            {error}
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Ordenes Pendientes</p>
-                <p className="text-2xl font-bold text-gray-800">40</p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
-                <ClockIcon />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Ordenes Completas</p>
-                <p className="text-2xl font-bold text-gray-800">40</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                <CheckIcon />
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
           <div className="flex items-center space-x-4">
@@ -266,31 +159,44 @@ const MacetasPage = ({ onLogout }) => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dimensiones</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Peso</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Colores</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Color</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Imagen</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {currentData.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
+                      Cargando...
+                    </td>
+                  </tr>
+                ) : currentData.length > 0 ? (
                   currentData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-800">{item.nombre}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.descripcion}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.dimensiones}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.peso}</td>
-                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">{item.precio}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.colores}</td>
+                    <tr key={item._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-800">{item.name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.description}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.dimensions}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.weight}</td>
+                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">${item.price}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.color}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">{item.stock}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600 text-2xl">{item.imagen}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded" />
+                        ) : '—'}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <div className="flex items-center space-x-2">
-                          <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                          <button
+                            onClick={() => openModal(item)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          >
                             <EditIcon />
                           </button>
-                          <button 
-                            onClick={() => handleDelete(item.id)}
+                          <button
+                            onClick={() => handleDelete(item._id)}
                             className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                           >
                             <DeleteIcon />
@@ -359,11 +265,12 @@ const MacetasPage = ({ onLogout }) => {
 
       <ModalAgregarProducto
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={closeModal}
         onSave={handleSaveMaceta}
-        title="AGREGAR MACETA NUEVA"
-        buttonText="Guardar Maceta"
+        title={editingItem ? 'EDITAR MACETA' : 'AGREGAR MACETA NUEVA'}
+        buttonText={editingItem ? 'Guardar Cambios' : 'Guardar Maceta'}
         fields={macetaFields}
+        initialValues={editingItem}
       />
     </div>
   );

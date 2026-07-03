@@ -53,7 +53,7 @@ postController.delete = async (req, res) => {
             return res.status(404).json({ message: 'Candle not found' });
         }
         // Eliminar la imagen de Cloudinary
-        await cloudinary.uploader.destroy(postDelete.public_id);
+        await cloudinary.uploader.destroy(postToDelete.public_id);
         // Eliminar el documento de la base de datos
         await postModel.findByIdAndDelete(id);
         res.status(200).json({ message: 'Post deleted successfully' });
@@ -67,13 +67,15 @@ postController.delete = async (req, res) => {
 postController.update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, price, stock, color} = req.body;
+        const { name, description, dimensions, weight, price, stock, color } = req.body;
         const postToUpdate = await postModel.findById(id);
 
         if (!postToUpdate) {
-            return res.status(404).json({ message: 'Candle not found' });
+            return res.status(404).json({ message: 'Post not found' });
         }
-       
+
+        const updatedData = { name, description, dimensions, weight, price, stock, color };
+
         //si viene alguna imagen
         if(req.file){
             //eliminar la imagen anterior
@@ -85,11 +87,11 @@ postController.update = async (req, res) => {
         }
 
         //actualizo en la base de datos
-        await candleModel.findByIdAndUpdate(req.params.id,
+        const updatedPost = await postModel.findByIdAndUpdate(id,
             updatedData,
             {new: true});
 
-        return res.status(200).json({message: "Post updated"})
+        return res.status(200).json({ message: "Post updated", post: updatedPost })
     } catch (error) {
         console.log("error"+ error);
         res.status(500).json({ message: 'Internal Server Error' });

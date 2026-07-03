@@ -3,6 +3,7 @@ import MenuLateral from '../components/MenuLateral';
 import ModalAgregarProducto from '../components/ModalAgregarProducto';
 import { useCrud } from '../hooks/useCrud';
 import { useToast } from '../hooks/useToast';
+import { getCandles, createCandle, updateCandle, deleteCandle } from '../api/candlesApi';
 
 const SearchIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,242 +29,113 @@ const PackageIcon2 = () => (
   </svg>
 );
 
-const ClockIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
+// Campos del formulario: los "name" DEBEN coincidir exactamente con el modelo
+// backend/src/models/candles.js (name, description, scent, size, price, stock, color, image)
+const velaFields = [
+  { name: 'name', label: 'Nombre', type: 'text', placeholder: 'Ej: Vela Aromática', required: true, column: 'left' },
+  { name: 'scent', label: 'Aroma', type: 'text', placeholder: 'Ej: Lavanda', required: true, column: 'left' },
+  { name: 'size', label: 'Tamaño', type: 'text', placeholder: '12 x 7.5cm', required: true, column: 'left' },
+  { name: 'price', label: 'Precio', type: 'number', placeholder: '0.00', required: true, column: 'left' },
+  { name: 'stock', label: 'Existencias', type: 'number', placeholder: '0', required: true, column: 'left' },
+  { name: 'color', label: 'Color', type: 'text', placeholder: 'Ej: Verde, Rojo', required: true, column: 'right' },
+  { name: 'description', label: 'Descripción', type: 'textarea', placeholder: 'Escribe una descripción detallada......', required: true, column: 'right', rows: 4 },
+  { name: 'image', label: 'Imagen del producto', type: 'file', column: 'right' }
+];
 
-const CheckIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
+const candlesApi = {
+  getAll: getCandles,
+  create: createCandle,
+  update: updateCandle,
+  remove: deleteCandle
+};
 
 const VelasPage = ({ onLogout }) => {
-  const { showSuccess } = useToast(3000);
-
-  const initialVelas = [
-    {
-      id: 1,
-      nombre: 'Arbol Navideño',
-      descripcion: 'Vela en forma de Arbol de Navidad',
-      aroma: 'Lavanda',
-      tamaño: '12 x 7.5cm',
-      precio: '$2.00',
-      colores: 'Verde, Rojo',
-      stock: '65 ud',
-      imagen: '',
-      status: 'Pendiente'
-    },
-    {
-      id: 2,
-      nombre: 'Arbol Navideño',
-      descripcion: 'Vela en forma de Arbol de Navidad',
-      aroma: 'Lavanda',
-      tamaño: '12 x 7.5cm',
-      precio: '$2.00',
-      colores: 'Verde, Rojo',
-      stock: '65 ud',
-      imagen: '',
-      status: 'En proceso'
-    },
-    {
-      id: 3,
-      nombre: 'Arbol Navideño',
-      descripcion: 'Vela en forma de Arbol de Navidad',
-      aroma: 'Lavanda',
-      tamaño: '12 x 7.5cm',
-      precio: '$2.00',
-      colores: 'Verde, Rojo',
-      stock: '65 ud',
-      imagen: '',
-      status: 'Entregado'
-    },
-    {
-      id: 4,
-      nombre: 'Arbol Navideño',
-      descripcion: 'Vela en forma de Arbol de Navidad',
-      aroma: 'Lavanda',
-      tamaño: '12 x 7.5cm',
-      precio: '$2.00',
-      colores: 'Verde, Rojo',
-      stock: '65 ud',
-      imagen: '',
-      status: 'Pendiente'
-    },
-    {
-      id: 5,
-      nombre: 'Vela Cilíndrica',
-      descripcion: 'Vela cilíndrica aromática',
-      aroma: 'Vainilla',
-      tamaño: '10 x 8cm',
-      precio: '$3.50',
-      colores: 'Blanco, Beige',
-      stock: '42 ud',
-      imagen: '',
-      status: 'En proceso'
-    },
-    {
-      id: 6,
-      nombre: 'Vela Redonda',
-      descripcion: 'Vela redonda decorativa',
-      aroma: 'Rosa',
-      tamaño: '8 x 8cm',
-      precio: '$2.80',
-      colores: 'Rosa, Blanco',
-      stock: '89 ud',
-      imagen: '',
-      status: 'Entregado'
-    },
-    {
-      id: 7,
-      nombre: 'Vela Floral',
-      descripcion: 'Vela con forma de flor',
-      aroma: 'Jazmín',
-      tamaño: '9 x 9cm',
-      precio: '$4.20',
-      colores: 'Rosa, Amarillo',
-      stock: '73 ud',
-      imagen: '',
-      status: 'Pendiente'
-    },
-    {
-      id: 8,
-      nombre: 'Arbol Navideño',
-      descripcion: 'Vela en forma de Arbol de Navidad',
-      aroma: 'Lavanda',
-      tamaño: '12 x 7.5cm',
-      precio: '$2.00',
-      colores: 'Verde, Rojo',
-      stock: '65 ud',
-      imagen: '',
-      status: 'En proceso'
-    }
-  ];
-
-  const velaFields = [
-    { name: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Ej: Vela Aromática', required: true, column: 'left' },
-    { name: 'aroma', label: 'Aroma', type: 'text', placeholder: 'Ej: Lavanda', required: true, column: 'left' },
-    { name: 'tamaño', label: 'Tamaño', type: 'text', placeholder: '12 x 7.5cm', required: true, column: 'left' },
-    { name: 'precio', label: 'Precio', type: 'number', placeholder: '0.00', required: true, column: 'left' },
-    { name: 'stock', label: 'Existencias', type: 'number', placeholder: '0', required: true, column: 'left' },
-    { name: 'colores', label: 'Colores de Variación', type: 'colors', required: true, column: 'right' },
-    { name: 'descripcion', label: 'Descripción', type: 'textarea', placeholder: 'Escribe una descripción detallada......', required: true, column: 'right', rows: 4 },
-    { name: 'imagen', label: 'Imagen del producto', type: 'file', column: 'right' }
-  ];
+  const { showSuccess, showError } = useToast(3000);
 
   const {
+    loading,
+    error,
     searchTerm,
     setSearchTerm,
-    filter,
-    setFilter,
     currentPage,
     setCurrentPage,
     showModal,
     setShowModal,
+    editingItem,
     filteredData,
     currentData,
     totalPages,
     startIndex,
     itemsPerPage,
     addItem,
-    deleteItem
-  } = useCrud(initialVelas);
+    updateItem,
+    deleteItem,
+    openModal,
+    closeModal
+  } = useCrud(candlesApi);
 
-  const handleSaveVela = (formData) => {
-    const velaToAdd = {
-      nombre: formData.nombre,
-      descripcion: formData.descripcion || 'Vela nueva',
-      aroma: formData.aroma || 'Sin aroma',
-      tamaño: formData.tamaño || '10 x 10cm',
-      precio: `$${formData.precio}`,
-      colores: formData.colores || 'Varios colores',
-      stock: `${formData.stock} ud`,
-      imagen: '',
-      status: 'Pendiente'
-    };
-    addItem(velaToAdd);
-    showSuccess('Vela agregada exitosamente');
+  const buildFormData = (values) => {
+    const fd = new FormData();
+    fd.append('name', values.name);
+    fd.append('description', values.description);
+    fd.append('scent', values.scent);
+    fd.append('size', values.size);
+    fd.append('price', values.price);
+    fd.append('stock', values.stock);
+    fd.append('color', values.color);
+    // Solo se adjunta si el usuario seleccionó un archivo nuevo (File real, no string)
+    if (values.image instanceof File) {
+      fd.append('image', values.image);
+    }
+    return fd;
   };
 
-  const handleDelete = (id) => {
+  const handleSaveVela = async (formValues) => {
+    try {
+      const fd = buildFormData(formValues);
+      if (editingItem) {
+        await updateItem(editingItem._id, fd);
+        showSuccess('Vela actualizada exitosamente');
+      } else {
+        await addItem(fd);
+        showSuccess('Vela agregada exitosamente');
+      }
+    } catch (err) {
+      showError(err.message || 'No se pudo guardar la vela');
+    }
+  };
+
+  const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar esta vela?')) {
-      deleteItem(id);
-      showSuccess('Vela eliminada exitosamente');
+      try {
+        await deleteItem(id);
+        showSuccess('Vela eliminada exitosamente');
+      } catch (err) {
+        showError(err.message || 'No se pudo eliminar la vela');
+      }
     }
   };
 
   return (
     <div className="flex h-screen bg-gray-100">
       <MenuLateral onLogout={onLogout} />
-      
+
       <div className="flex-1 overflow-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">Velas</h2>
-          <button 
-            onClick={() => setShowModal(true)}
+          <button
+            onClick={() => openModal(null)}
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors"
           >
             <span>+ Agregar vela</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Nuevas Ordenes</p>
-                <p className="text-2xl font-bold text-gray-800">90</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                <PackageIcon2 />
-              </div>
-            </div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+            {error}
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Ordenes Pendientes</p>
-                <p className="text-2xl font-bold text-gray-800">40</p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
-                <ClockIcon />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Ordenes Completas</p>
-                <p className="text-2xl font-bold text-gray-800">40</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                <CheckIcon />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Ordenes Rechazadas</p>
-                <p className="text-2xl font-bold text-gray-800">10</p>
-              </div>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
-                <XIcon />
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4">
@@ -282,49 +154,6 @@ const VelasPage = ({ onLogout }) => {
                 <SearchIcon />
               </div>
             </div>
-            
-            <div className="flex space-x-2">
-              <button
-                onClick={() => { setFilter('todos'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'todos'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Todas
-              </button>
-              <button
-                onClick={() => { setFilter('Pendiente'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'Pendiente'
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Pendiente
-              </button>
-              <button
-                onClick={() => { setFilter('En proceso'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'En proceso'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                En proceso
-              </button>
-              <button
-                onClick={() => { setFilter('Entregado'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'Entregado'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Entregado
-              </button>
-            </div>
           </div>
         </div>
 
@@ -338,31 +167,44 @@ const VelasPage = ({ onLogout }) => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aroma</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tamaño</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Colores</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Color</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Imagen</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {currentData.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
+                      Cargando...
+                    </td>
+                  </tr>
+                ) : currentData.length > 0 ? (
                   currentData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-800">{item.nombre}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.descripcion}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.aroma}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.tamaño}</td>
-                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">{item.precio}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.colores}</td>
+                    <tr key={item._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-800">{item.name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.description}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.scent}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.size}</td>
+                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">${item.price}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.color}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">{item.stock}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600 text-2xl">{item.imagen}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded" />
+                        ) : '—'}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <div className="flex items-center space-x-2">
-                          <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                          <button
+                            onClick={() => openModal(item)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          >
                             <EditIcon />
                           </button>
-                          <button 
-                            onClick={() => handleDelete(item.id)}
+                          <button
+                            onClick={() => handleDelete(item._id)}
                             className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                           >
                             <DeleteIcon />
@@ -431,11 +273,12 @@ const VelasPage = ({ onLogout }) => {
 
       <ModalAgregarProducto
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={closeModal}
         onSave={handleSaveVela}
-        title="AGREGAR VELA NUEVA"
-        buttonText="Guardar Vela"
+        title={editingItem ? 'EDITAR VELA' : 'AGREGAR VELA NUEVA'}
+        buttonText={editingItem ? 'Guardar Cambios' : 'Guardar Vela'}
         fields={velaFields}
+        initialValues={editingItem}
       />
     </div>
   );

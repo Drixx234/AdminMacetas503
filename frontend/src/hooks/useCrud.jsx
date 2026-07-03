@@ -1,7 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 
-export const useCrud = (initialData = []) => {
-  const [data, setData] = useState(initialData);
+/**
+ * Hook genérico de CRUD conectado al backend real.
+ *
+ * No conoce endpoints ni URLs: recibe un objeto `api` con las 4 funciones
+ * que tú crees en frontend/src/api/<recurso>Api.js
+ *
+ * @param {Object} api
+ * @param {Function} api.getAll   - () => Promise<Array>
+ * @param {Function} api.create  - (formData: FormData) => Promise<Object>
+ * @param {Function} api.update  - (id: string, formData: FormData) => Promise<Object>
+ * @param {Function} api.remove  - (id: string) => Promise<void>
+ */
+export const useCrud = (api) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
@@ -10,32 +25,50 @@ export const useCrud = (initialData = []) => {
 
   const itemsPerPage = 4;
 
-  const addItem = (newItem) => {
-    const itemToAdd = {
-      id: data.length + 1,
-      ...newItem
-    };
-    setData([...data, itemToAdd]);
+  // --- Cargar datos reales del backend ---
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const items = await api.getAll();
+      setData(items);
+    } catch (err) {
+      setError(err.message || 'Error al cargar los datos');
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // --- Crear ---
+  const addItem = async (formData) => {
+    const created = await api.create(formData);
+    await fetchData();
     setShowModal(false);
-    return itemToAdd;
+    return created;
   };
 
-  const updateItem = (id, updatedItem) => {
-    setData(data.map(item => 
-      item.id === id ? { ...item, ...updatedItem } : item
-    ));
+  // --- Editar ---
+  const updateItem = async (id, formData) => {
+    const updated = await api.update(id, formData);
+    await fetchData();
     setEditingItem(null);
     setShowModal(false);
+    return updated;
   };
 
-  const deleteItem = (id) => {
-    setData(data.filter(item => item.id !== id));
+  // --- Eliminar ---
+  const deleteItem = async (id) => {
+    await api.remove(id);
+    setData(prev => prev.filter(item => item._id !== id));
   };
 
   const filteredData = useMemo(() => {
     let result = data;
-    
-    // Búsqueda por cualquier campo
+
     if (searchTerm) {
       result = result.filter(item =>
         Object.values(item).some(value =>
@@ -43,22 +76,20 @@ export const useCrud = (initialData = []) => {
         )
       );
     }
-    
-    // Filtro por status (solo si existe la propiedad)
+
     if (filter !== 'todos') {
       result = result.filter(item => {
-        // Si el item tiene status, filtrar, si no, mostrar todo
         if (item.status) {
           return item.status === filter;
         }
         return true;
       });
     }
-    
+
     return result;
   }, [data, searchTerm, filter]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
@@ -88,6 +119,8 @@ export const useCrud = (initialData = []) => {
   return {
     data,
     setData,
+    loading,
+    error,
     searchTerm,
     setSearchTerm,
     filter,
@@ -110,6 +143,7 @@ export const useCrud = (initialData = []) => {
     prevPage,
     resetFilters,
     openModal,
-    closeModal
+    closeModal,
+    refetch: fetchData
   };
 };

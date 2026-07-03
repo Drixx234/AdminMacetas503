@@ -1,56 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const ModalAgregarProducto = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
+const ModalAgregarProducto = ({
+  isOpen,
+  onClose,
+  onSave,
   title = 'AGREGAR PRODUCTO NUEVO',
   buttonText = 'Guardar Producto',
-  fields = []
+  fields = [],
+  initialValues = null // objeto del item a editar, o null si es "crear"
 }) => {
   const [formData, setFormData] = useState({});
-  const [selectedColors, setSelectedColors] = useState([]);
 
-  // Inicializar formData con los campos
-  React.useEffect(() => {
+  // Inicializar formData: si hay initialValues (modo edición) los precarga,
+  // si no, arranca vacío (modo creación). Se reinicia cada vez que se abre el modal.
+  useEffect(() => {
+    if (!isOpen) return;
+
     const initialData = {};
     fields.forEach(field => {
-      if (field.type === 'colors') {
-        initialData[field.name] = ['', '', '', '', '', ''];
-      } else if (field.type === 'file') {
-        initialData[field.name] = null;
+      if (field.type === 'file') {
+        initialData[field.name] = null; // el archivo nunca se precarga, solo se reemplaza si el usuario sube uno nuevo
       } else {
-        initialData[field.name] = '';
+        initialData[field.name] = initialValues?.[field.name] ?? '';
       }
     });
     setFormData(initialData);
-  }, [fields]);
+  }, [isOpen, initialValues, fields]);
 
   if (!isOpen) return null;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
-    });
+    }));
   };
 
-  const handleColorToggle = (index) => {
-    if (selectedColors.includes(index)) {
-      setSelectedColors(selectedColors.filter(i => i !== index));
-    } else {
-      setSelectedColors([...selectedColors, index]);
-    }
-  };
-
-  const handleImageUpload = (e) => {
+  const handleImageUpload = (fieldName, e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData({
-        ...formData,
-        imagen: file
-      });
+      setFormData(prev => ({
+        ...prev,
+        [fieldName]: file
+      }));
     }
   };
 
@@ -59,7 +52,6 @@ const ModalAgregarProducto = ({
     if (onSave) {
       onSave(formData);
     }
-    onClose();
   };
 
   const renderField = (field) => {
@@ -104,44 +96,27 @@ const ModalAgregarProducto = ({
           />
         );
 
-      case 'colors':
-        return (
-          <div className="grid grid-cols-3 gap-2">
-            {formData[field.name]?.map((color, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => handleColorToggle(index)}
-                className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                  selectedColors.includes(index)
-                    ? 'bg-green-500 text-white border-green-500'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {color || `Color ${index + 1}`}
-              </button>
-            ))}
-          </div>
-        );
-
       case 'file':
         return (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors cursor-pointer">
             <input
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
+              onChange={(e) => handleImageUpload(field.name, e)}
               className="hidden"
-              id="image-upload"
+              id={`image-upload-${field.name}`}
             />
-            <label htmlFor="image-upload" className="cursor-pointer">
+            <label htmlFor={`image-upload-${field.name}`} className="cursor-pointer">
               <div className="flex flex-col items-center">
                 <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="text-sm text-gray-500">Arrastra y suelta o haz clic para subir una imagen</p>
-                {formData.imagen && (
-                  <p className="text-sm text-green-600 mt-2">✓ {formData.imagen.name}</p>
+                {formData[field.name] && (
+                  <p className="text-sm text-green-600 mt-2">✓ {formData[field.name].name}</p>
+                )}
+                {!formData[field.name] && initialValues?.image && (
+                  <p className="text-sm text-gray-500 mt-2">Ya tiene una imagen; sube una nueva solo si quieres reemplazarla</p>
                 )}
               </div>
             </label>
@@ -160,11 +135,11 @@ const ModalAgregarProducto = ({
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-y-auto">
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div 
+        <div
           className="fixed inset-0 pointer-events-auto"
           onClick={onClose}
         />
-        
+
         <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto pointer-events-auto">
           <div className="border-b px-6 py-4 sticky top-0 bg-white z-10">
             <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
