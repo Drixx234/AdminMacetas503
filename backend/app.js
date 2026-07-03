@@ -23,6 +23,9 @@ import offersRoutes from "./src/routes/offers.js"
 //import rutas de carrito
 import cartRoutes from "./src/routes/cart.js"
 
+//import rutas de ordenes (admin, usa el modelo de carrito)
+import ordersRoutes from "./src/routes/orders.js"
+
 //import rutas de configuración
 import configRoutes from "./src/routes/config.js"
 
@@ -78,6 +81,9 @@ app.use("/api/offers", offersRoutes);
 
 //ruta de carrito
 app.use("/api/cart", cartRoutes);
+
+//ruta de ordenes (admin)
+app.use("/api/orders", ordersRoutes);
 
 //ruta de configuración
 app.use("/api/config", configRoutes);

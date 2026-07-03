@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import MenuLateral from '../components/MenuLateral';
 import { useCrud } from '../hooks/useCrud';
 import { useToast } from '../hooks/useToast';
+import { getOrders, updateOrderStatus, deleteOrder } from '../api/ordersApi';
 
 const SearchIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -9,21 +10,9 @@ const SearchIcon = () => (
   </svg>
 );
 
-const EditIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-  </svg>
-);
-
 const DeleteIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
-
-const StarIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
   </svg>
 );
 
@@ -51,21 +40,21 @@ const XIcon = () => (
   </svg>
 );
 
-const OrdenesPage = ({ onLogout }) => {
-  const { showSuccess } = useToast(3000);
+const STATUS_OPTIONS = ['Pendiente', 'Aceptado', 'En proceso', 'Completo', 'Rechazado'];
 
-  const initialOrdenes = [
-    { id: 1, producto: 'Mini-B', items: 4, cliente: 'Alejandro Marquez', tipo: 'Cliente nuevo', orden: '#CR-284730', monto: '$25.50', estatus: 'Aceptado' },
-    { id: 2, producto: 'Mini-B', items: 4, cliente: 'Alejandro Marquez', tipo: 'Cliente nuevo', orden: '#CR-284730', monto: '$30.50', estatus: 'Pendiente' },
-    { id: 3, producto: 'Mini-B', items: 4, cliente: 'Alejandro Marquez', tipo: 'Cliente nuevo', orden: '#CR-284730', monto: '$41.50', estatus: 'Pendiente' },
-    { id: 4, producto: 'Mini-8', items: 4, cliente: 'Serena', tipo: 'Cliente nuevo', orden: '#GR-284730', monto: '$15.50', estatus: 'Aceptado' },
-    { id: 5, producto: 'Mini-B', items: 4, cliente: 'Alejandro Marquez', tipo: 'Cliente nuevo', orden: '#GR-284730', monto: '$35.00', estatus: 'Pendiente' },
-    { id: 6, producto: 'Mini-B', items: 4, cliente: 'Alejandro Marquez', tipo: 'Cliente nuevo', orden: '#GR-284730', monto: '$45.00', estatus: 'Completo' },
-    { id: 7, producto: 'Hexagonal', items: 2, cliente: 'Ricardo D', tipo: 'Cliente nuevo', orden: '#CR-284731', monto: '$20.00', estatus: 'Rechazado' },
-    { id: 8, producto: 'Buho pot', items: 3, cliente: 'Francisca', tipo: 'Cliente nuevo', orden: '#GR-284731', monto: '$55.00', estatus: 'En proceso' }
-  ];
+const ordersApi = {
+  getAll: getOrders,
+  remove: deleteOrder
+  // No hay 'create': las órdenes las genera el cliente al hacer checkout, el admin no crea órdenes desde aquí.
+};
+
+const OrdenesPage = ({ onLogout }) => {
+  const { showSuccess, showError } = useToast(3000);
 
   const {
+    data,
+    loading,
+    error,
     searchTerm,
     setSearchTerm,
     filter,
@@ -77,8 +66,9 @@ const OrdenesPage = ({ onLogout }) => {
     totalPages,
     startIndex,
     itemsPerPage,
-    deleteItem
-  } = useCrud(initialOrdenes);
+    deleteItem,
+    setData
+  } = useCrud(ordersApi);
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -91,19 +81,35 @@ const OrdenesPage = ({ onLogout }) => {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar esta orden?')) {
-      deleteItem(id);
-      showSuccess('Orden eliminada exitosamente');
+      try {
+        await deleteItem(id);
+        showSuccess('Orden eliminada exitosamente');
+      } catch (err) {
+        showError(err.message || 'No se pudo eliminar la orden');
+      }
     }
   };
 
-  const stats = [
-    { label: 'Nuevas Ordenes', value: '90', icon: PackageIcon2, color: 'green' },
-    { label: 'Ordenes Pendientes', value: '40', icon: ClockIcon, color: 'yellow' },
-    { label: 'Ordenes Completas', value: '40', icon: CheckIcon, color: 'blue' },
-    { label: 'Ordenes Rechazadas', value: '10', icon: XIcon, color: 'red' }
-  ];
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await updateOrderStatus(id, newStatus);
+      // Actualiza localmente sin tener que re-pedir todo el listado al backend
+      setData(prev => prev.map(order => order._id === id ? { ...order, status: newStatus } : order));
+      showSuccess('Estatus actualizado');
+    } catch (err) {
+      showError(err.message || 'No se pudo actualizar el estatus');
+    }
+  };
+
+  // Conteos reales calculados a partir de las órdenes cargadas (no son datos fijos de mentira)
+  const stats = useMemo(() => ([
+    { label: 'Nuevas Ordenes', value: data.length, icon: PackageIcon2, color: 'green' },
+    { label: 'Ordenes Pendientes', value: data.filter(o => o.status === 'Pendiente').length, icon: ClockIcon, color: 'yellow' },
+    { label: 'Ordenes Completas', value: data.filter(o => o.status === 'Completo').length, icon: CheckIcon, color: 'blue' },
+    { label: 'Ordenes Rechazadas', value: data.filter(o => o.status === 'Rechazado').length, icon: XIcon, color: 'red' }
+  ]), [data]);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -114,6 +120,12 @@ const OrdenesPage = ({ onLogout }) => {
           <h2 className="text-2xl font-semibold text-gray-800">Ordenes</h2>
           <p className="text-gray-500 text-sm">Maneja y Visualiza el Registro de Ordenes</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -171,56 +183,19 @@ const OrdenesPage = ({ onLogout }) => {
               >
                 Todas
               </button>
-              <button
-                onClick={() => { setFilter('Aceptado'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'Aceptado'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Aceptado
-              </button>
-              <button
-                onClick={() => { setFilter('Pendiente'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'Pendiente'
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Pendiente
-              </button>
-              <button
-                onClick={() => { setFilter('En proceso'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'En proceso'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                En proceso
-              </button>
-              <button
-                onClick={() => { setFilter('Completo'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'Completo'
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Completo
-              </button>
-              <button
-                onClick={() => { setFilter('Rechazado'); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  filter === 'Rechazado'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Rechazado
-              </button>
+              {STATUS_OPTIONS.map(status => (
+                <button
+                  key={status}
+                  onClick={() => { setFilter(status); setCurrentPage(1); }}
+                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                    filter === status
+                      ? 'bg-gray-800 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -231,8 +206,8 @@ const OrdenesPage = ({ onLogout }) => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre Del Producto</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre Del Cliente</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Orden</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto Pagado</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estatus</th>
@@ -240,43 +215,49 @@ const OrdenesPage = ({ onLogout }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {currentData.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                      Cargando...
+                    </td>
+                  </tr>
+                ) : currentData.length > 0 ? (
                   currentData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item._id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div>
-                          <p className="text-sm text-gray-800 font-medium">{item.producto}</p>
+                          <p className="text-sm text-gray-800 font-medium">{item.product}</p>
                           <p className="text-xs text-gray-400">{item.items} items</p>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div>
-                          <p className="text-sm text-gray-800">{item.cliente}</p>
-                          <p className="text-xs text-gray-400">{item.tipo}</p>
+                          <p className="text-sm text-gray-800">{item.client?.name || 'Cliente eliminado'}</p>
+                          <p className="text-xs text-gray-400">{item.clientType}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600 font-mono">{item.orden}</span>
+                        <span className="text-sm text-gray-600 font-mono">{item.orderCode}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">{item.monto}</td>
+                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">${item.total?.toFixed(2)}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(item.estatus)}`}>
-                          {item.estatus}
-                        </span>
+                        <select
+                          value={item.status}
+                          onChange={(e) => handleStatusChange(item._id, e.target.value)}
+                          className={`px-2 py-1 rounded-full text-xs border-0 cursor-pointer ${getStatusColor(item.status)}`}
+                        >
+                          {STATUS_OPTIONS.map(status => (
+                            <option key={status} value={status}>{status}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center space-x-2">
-                          <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
-                            <EditIcon />
-                          </button>
                           <button 
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => handleDelete(item._id)}
                             className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                           >
                             <DeleteIcon />
-                          </button>
-                          <button className="p-1 text-yellow-600 hover:bg-yellow-50 rounded transition-colors">
-                            <StarIcon />
                           </button>
                         </div>
                       </td>
