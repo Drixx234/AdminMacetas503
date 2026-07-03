@@ -24,7 +24,7 @@ const Login = () => {
   };
 
   const { values, errors, handleChange, handleSubmit } = useForm({
-    email: 'admin@macetas503.com',
+    email: '',
     password: ''
   }, validate);
 

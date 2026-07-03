@@ -51,9 +51,9 @@ plantsController.delete = async (req, res) => {
             return res.status(404).json({ message: 'Candle not found' });
         }
         // Eliminar la imagen de Cloudinary
-        await cloudinary.uploader.destroy(plantsDelete.public_id);
+        await cloudinary.uploader.destroy(plantsToDelete.public_id);
         // Eliminar el documento de la base de datos
-        await postModel.findByIdAndDelete(id);
+        await plantsModel.findByIdAndDelete(id);
         res.status(200).json({ message: 'Plants deleted successfully' });
     } catch (error) {
         console.log("error"+ error);
@@ -65,17 +65,19 @@ plantsController.delete = async (req, res) => {
 plantsController.update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, care, size, price, stock, product_id} = req.body;
-        const plantsToUpdate = await postModel.findById(id);
+        const { name, care, size, price, stock, product_id } = req.body;
+        const plantsToUpdate = await plantsModel.findById(id);
 
         if (!plantsToUpdate) {
             return res.status(404).json({ message: 'Plants not found' });
         }
-       
+
+        const updatedData = { name, care, size, price, stock, product_id };
+
         //si viene alguna imagen
         if(req.file){
             //eliminar la imagen anterior
-            await cloudinary.uploader.destroy(postToUpdate.public_id)
+            await cloudinary.uploader.destroy(plantsToUpdate.public_id)
             
             //guardar la nueva imagen
             updatedData.image = req.file.path;
@@ -83,11 +85,11 @@ plantsController.update = async (req, res) => {
         }
 
         //actualizo en la base de datos
-        await candleModel.findByIdAndUpdate(req.params.id,
+        const updatedPlants = await plantsModel.findByIdAndUpdate(id,
             updatedData,
             {new: true});
 
-        return res.status(200).json({message: "Plants updated"})
+        return res.status(200).json({ message: "Plants updated", plants: updatedPlants })
     } catch (error) {
         console.log("error"+ error);
         res.status(500).json({ message: 'Internal Server Error' });

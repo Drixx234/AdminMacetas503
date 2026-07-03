@@ -8,6 +8,7 @@ import NuevaContrasena from './pages/NuevaContraseña';
 import Dashboard from './pages/Dashboard';
 import MacetasPage from './pages/Macetas';
 import VelasPage from './pages/Velas';
+import PlantasPage from './pages/Plantas';
 import AjustesPage from './pages/Ajustes';
 import InventarioPage from './pages/Inventario';
 import ReportesPage from './pages/Reportes';
@@ -31,6 +32,7 @@ function App() {
         <Route path="/ordenespersonalizadas" element={<OrdenesPersonalizadasPage />} />
         <Route path="/macetas" element={<MacetasPage />} />
         <Route path="/velas" element={<VelasPage />} />
+        <Route path="/plantas" element={<PlantasPage />} />
         <Route path="/inventario" element={<InventarioPage />} />
         <Route path="/reportes" element={<ReportesPage />} />
         <Route path="/ajustes" element={<AjustesPage />} />
